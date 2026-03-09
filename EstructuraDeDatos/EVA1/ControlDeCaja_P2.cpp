@@ -35,6 +35,7 @@ void limpiarPantalla();
 bool validarNombre(string nombre);
 bool validarNumeroCuenta(int cuenta);
 bool validarMonto(int monto);
+int ingresarInt();
 
 int main(){
     Pila caja = NULL;
@@ -79,12 +80,12 @@ int main(){
 
 void ingresarFondoCaja(){
     cout << "Ingrese el monto del fondo de caja (minimo $300,000): $";
-    cin >> fondoCaja;
+    fondoCaja = ingresarInt();
     
     while(fondoCaja < 300000){
         cout << "\nError: El fondo de caja debe ser mayor a $300,000" << endl;
         cout << "Ingrese un monto valido: $";
-        cin >> fondoCaja;
+        fondoCaja = ingresarInt();
     }
     
     cout << "\nFondo de caja: $"<< fixed << fondoCaja << endl;
@@ -193,20 +194,19 @@ void ingresarMovimiento(Pila &caja){
     }
 
     cout << "Numero de cuenta (minimo de 8 digitos): ";
-    cin >> nuevo->cuenta;
-    cin.ignore();
+    nuevo->cuenta = ingresarInt();
     
     while(!validarNumeroCuenta(nuevo->cuenta)){
         cout << "Error: La cuenta debe tener un minimo de 8 digitos." << endl;
         cout << "Ingrese de nuevo el numero de cuenta: ";
-        cin >> nuevo->cuenta;
+        nuevo->cuenta = ingresarInt();
         cin.ignore();
     }
     
     cout << "Tipo de movimiento (DEPOSITO | RETIRO): ";
     getline(cin, nuevo->movimiento);
     cout << "Monto del movimiento: $";
-    cin >> nuevo->monto;
+    nuevo->monto = ingresarInt();
     cin.ignore();
 
     if(!validarMonto(nuevo->monto)){
@@ -257,4 +257,18 @@ bool validarMonto(int monto) {
 
 void limpiarPantalla() {
     system("cls");
+}
+
+int ingresarInt() {
+    int valor;
+    while (true) {
+        cin >> valor;
+        if (cin.fail() || cin.peek() != '\n') {
+            cout << "\nError: Debes ingresar un numero entero." << endl;
+            cin.clear();
+            cin.ignore(1000, '\n');
+        } else {
+            return valor;
+        }
+    }
 }
