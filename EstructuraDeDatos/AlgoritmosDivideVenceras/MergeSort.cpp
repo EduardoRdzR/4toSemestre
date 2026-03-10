@@ -2,13 +2,13 @@
 #include <stdlib.h>
 using namespace std;
 
-// Definicion del nodo
+
 struct Nodo {
     int dato;
     Nodo* sig;
 };
 
-// Crear nodo
+
 Nodo* crearNodo(int valor) {
     Nodo* nuevo = new Nodo();
     nuevo->dato = valor;
@@ -16,14 +16,14 @@ Nodo* crearNodo(int valor) {
     return nuevo;
 }
 
-// Insertar al inicio
+
 void insertar(Nodo*& cabeza, int valor) {
     Nodo* nuevo = crearNodo(valor);
     nuevo->sig = cabeza;
     cabeza = nuevo;
 }
 
-// Imprimir lista
+
 void imprimir(Nodo* cabeza) {
     while (cabeza != NULL) {
         cout << cabeza->dato << " ";
@@ -32,7 +32,7 @@ void imprimir(Nodo* cabeza) {
     cout << endl;
 }
 
-// Unir dos listas ordenadas
+
 Nodo* merge(Nodo* a, Nodo* b) {
 
     if (a == NULL) return b;
@@ -52,7 +52,7 @@ Nodo* merge(Nodo* a, Nodo* b) {
     return resultado;
 }
 
-// Encontrar mitad de la lista
+
 void dividirLista(Nodo* fuente, Nodo** frente, Nodo** atras) {
 
     Nodo* rapido;
@@ -80,7 +80,7 @@ void dividirLista(Nodo* fuente, Nodo** frente, Nodo** atras) {
     }
 }
 
-// Merge Sort para lista enlazada
+
 void mergeSort(Nodo** cabeza) {
 
     Nodo* head = *cabeza;
