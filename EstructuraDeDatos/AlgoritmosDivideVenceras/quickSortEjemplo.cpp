@@ -6,25 +6,28 @@ using namespace std;
 
 struct Nodo {
     int dato;
-    Nodo* sig;
+    struct Nodo *sig;
 };
+typedef struct Nodo *Tlista;
 
-void insertar(Nodo*& Lista, int valor) {
-    Nodo* nuevo = new Nodo{valor, nullptr};
+void insertar(Tlista& Lista, int valor) {
+    Tlista nuevo = new(struct Nodo);
+    nuevo->dato = valor;
+    nuevo->sig = nullptr;
 
     if (Lista == nullptr) {
         Lista = nuevo;
         return;
     }
 
-    Nodo* temp = Lista;
+    Tlista temp = Lista;
     while (temp->sig != nullptr) {
         temp = temp->sig;
     }
     temp->sig = nuevo;
 }
 
-void imprimir(Nodo* Lista) {
+void imprimir(Tlista Lista) {
     while (Lista != nullptr) {
         cout << Lista->dato << " ";
         Lista = Lista->sig;
@@ -32,10 +35,10 @@ void imprimir(Nodo* Lista) {
     cout << endl;
 }
 
-Nodo* concatenar(Nodo* a, Nodo* b) {
+Tlista concatenar(Tlista a, Tlista b) {
     if (a == nullptr) return b;
 
-    Nodo* temp = a;
+    Tlista temp = a;
     while (temp->sig != nullptr) {
         temp = temp->sig;
     }
@@ -43,17 +46,17 @@ Nodo* concatenar(Nodo* a, Nodo* b) {
     return a;
 }
 
-Nodo* quickSort(Nodo* Lista) {
+Tlista quickSort(Tlista Lista) {
     if (Lista == nullptr || Lista->sig == nullptr)
         return Lista;
 
-    Nodo* pivote = Lista;
-    Nodo* actual = Lista->sig;
+    Tlista pivote = Lista;
+    Tlista actual = Lista->sig;
 
-    Nodo* menores = nullptr;
-    Nodo* mayores = nullptr;
+    Tlista menores = nullptr;
+    Tlista mayores = nullptr;
 
-    Nodo* salida = nullptr;
+    Tlista salida = nullptr;
 
     while (actual != nullptr) {
         if (actual->dato <= pivote->dato) {
@@ -84,7 +87,7 @@ bool validacionNumero(string s) {
 }
 
 int main() {
-    Nodo* lista = nullptr;
+    Tlista lista = nullptr;
     string numero;
 
     cout << "Ingresa los numeros de la lista (x para terminar):\n";
