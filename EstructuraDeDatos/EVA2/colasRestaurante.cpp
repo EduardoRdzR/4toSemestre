@@ -91,47 +91,88 @@ Nodo* buscarCliente(Nodo* frente, Nodo*& anterior, int tipoMesa) {
 
 // ===== MOSTRAR COLA =====
 void mostrarCola(Nodo* frente) {
+    if (frente==NULL)
+    {
+        cout << "Sin clientes en lista de espera\n";
+        return;
+    }
     cout << "\n--- LISTA DE ESPERA ---\n";
     while (frente != NULL) {
-        cout << "Nombre: " << frente->nombre
-             << " | Personas: " << frente->personas << endl;
+        cout << "Nombre: " << frente->nombre << " | Personas: " << frente->personas << endl;
         frente = frente->sig;
     }
 }
 
 // ===== ASIGNACION DIRECTA =====
-bool asignarDirecto(string nombre, int personas,
-                   int& m4, int& m6, int& m10) {
+bool asignarDirecto(string nombre, int personas, int& m4, int& m6, int& m10, Nodo* cola) {
 
-    // 1-4 personas
+    Nodo* aux;
+    // ===== 1-4 PERSONAS =====
     if (personas >= 1 && personas <= 4) {
+
+        // Mesa de 4
         if (m4 > 0) {
             m4--;
             cout << "✔ " << nombre << " pasa directo a mesa de 4\n";
             return true;
         }
+
+        // Mesa de 6 SOLO si NO hay 5 o 6 esperando
         if (personas == 4 && m6 > 0) {
-            m6--;
-            cout << "✔ " << nombre << " pasa directo a mesa de 6\n";
-            return true;
+
+            bool hay5o6 = false;
+            aux = cola;
+
+            while (aux != NULL) {
+                if (aux->personas == 5 || aux->personas == 6) {
+                    hay5o6 = true;
+                    break;
+                }
+                aux = aux->sig;
+            }
+
+            if (!hay5o6) {
+                m6--;
+                cout << "✔ " << nombre << " pasa a mesa de 6\n";
+                return true;
+            }
         }
+
+        // ❌ Nunca pasan a mesa de 10
     }
 
-    // 5-6 personas
+    // ===== 5-6 PERSONAS =====
     if (personas == 5 || personas == 6) {
+
         if (m6 > 0) {
             m6--;
             cout << "✔ " << nombre << " pasa directo a mesa de 6\n";
             return true;
         }
+
+        // Mesa de 10 SOLO si NO hay 7-10 esperando
         if (personas == 6 && m10 > 0) {
-            m10--;
-            cout << "✔ " << nombre << " pasa directo a mesa de 10\n";
-            return true;
+
+            bool hay7a10 = false;
+            aux = cola;
+
+            while (aux != NULL) {
+                if (aux->personas >= 7 && aux->personas <= 10) {
+                    hay7a10 = true;
+                    break;
+                }
+                aux = aux->sig;
+            }
+
+            if (!hay7a10) {
+                m10--;
+                cout << "✔ " << nombre << " pasa a mesa de 10\n";
+                return true;
+            }
         }
     }
 
-    // 7-10 personas
+    // ===== 7-10 PERSONAS =====
     if (personas >= 7 && personas <= 10) {
         if (m10 > 0) {
             m10--;
@@ -142,6 +183,151 @@ bool asignarDirecto(string nombre, int personas,
 
     return false;
 }
+
+void asignarMesas(Nodo*& cola, Nodo*& fin, int& mesas4, int& mesas6, int& mesas10,double& totalTiempo, int& atendidos) {
+
+    bool asignado;
+
+    do {
+        asignado = false;
+
+        Nodo* actual;
+        Nodo* anterior;
+        Nodo* mejor;
+        Nodo* mejorAnt;
+
+        // ===== MESA DE 4 =====
+        if (mesas4 > 0) {
+            actual = cola;
+            anterior = NULL;
+            mejor = NULL;
+            mejorAnt = NULL;
+
+            while (actual != NULL) {
+                if (actual->personas >= 1 && actual->personas <= 4) {
+                    mejor = actual;
+                    mejorAnt = anterior;
+                    break; // FIFO normal
+                }
+                anterior = actual;
+                actual = actual->sig;
+            }
+
+            if (mejor != NULL) {
+                eliminarNodo(cola, fin, mejorAnt, mejor);
+                mesas4--;
+                totalTiempo += difftime(time(0), mejor->llegada);
+                atendidos++;
+                cout << "✔ Mesa 4 asignada a " << mejor->nombre << endl;
+                delete mejor;
+                asignado = true;
+            }
+        }
+
+        // ===== MESA DE 6 =====
+        if (mesas6 > 0) {
+
+            // 1. Buscar primero 5 o 6
+            actual = cola;
+            anterior = NULL;
+            mejor = NULL;
+            mejorAnt = NULL;
+
+            while (actual != NULL) {
+                if (actual->personas == 5 || actual->personas == 6) {
+                    mejor = actual;
+                    mejorAnt = anterior;
+                    break;
+                }
+                anterior = actual;
+                actual = actual->sig;
+            }
+
+            // 2. Si no hay 5 o 6 → buscar 4
+            if (mejor == NULL) {
+                actual = cola;
+                anterior = NULL;
+
+                while (actual != NULL) {
+                    if (actual->personas == 4) {
+                        mejor = actual;
+                        mejorAnt = anterior;
+                        break;
+                    }
+                    anterior = actual;
+                    actual = actual->sig;
+                }
+            }
+
+            if (mejor != NULL) {
+                eliminarNodo(cola, fin, mejorAnt, mejor);
+                mesas6--;
+                totalTiempo += difftime(time(0), mejor->llegada);
+                atendidos++;
+                cout << "✔ Mesa 6 asignada a " << mejor->nombre << endl;
+                delete mejor;
+                asignado = true;
+            }
+        }
+
+        // ===== MESA DE 10 =====
+        if (mesas10 > 0) {
+
+            // 1. Buscar 7-10
+            actual = cola;
+            anterior = NULL;
+            mejor = NULL;
+            mejorAnt = NULL;
+
+            while (actual != NULL) {
+                if (actual->personas >= 7 && actual->personas <= 10) {
+                    mejor = actual;
+                    mejorAnt = anterior;
+                    break;
+                }
+                anterior = actual;
+                actual = actual->sig;
+            }
+
+            // 2. Si no hay → buscar 6
+            if (mejor == NULL) {
+                actual = cola;
+                anterior = NULL;
+
+                while (actual != NULL) {
+                    if (actual->personas == 6) {
+                        mejor = actual;
+                        mejorAnt = anterior;
+                        break;
+                    }
+                    anterior = actual;
+                    actual = actual->sig;
+                }
+            }
+
+            if (mejor != NULL) {
+                eliminarNodo(cola, fin, mejorAnt, mejor);
+                mesas10--;
+                totalTiempo += difftime(time(0), mejor->llegada);
+                atendidos++;
+                cout << "✔ Mesa 10 asignada a " << mejor->nombre << endl;
+                delete mejor;
+                asignado = true;
+            }
+        }
+
+    } while (asignado);
+
+    if (cola != NULL){
+        cout << "No hay mas mesas disponibles\n";
+        cout << "Clientes pendientes:\n";
+        mostrarCola(cola);
+    }
+    else {
+        cout << "Sin clientes en lista de espera\n";
+    }
+}
+
 void mostrarMesas(int mesas4, int mesas6, int mesas10) {
 
     cout << "\n";
@@ -192,129 +378,89 @@ int main() {
         cout << "Opcion: ";
         cin >> op;
 
-        if (op == 1) {
-            string nombre;
-            int personas;
+        switch (op) {
 
-            cout << "\nNombre: ";
-            cin >> nombre;
-            cout << "Personas: ";
-            cin >> personas;
+            case 1: {
+                string nombre;
+                int personas;
 
-            if (personas > 10) {
-                cout << "❌ Grupo rechazado\n";
-            } else {
-                if (!asignarDirecto(nombre, personas, mesas4, mesas6, mesas10)) {
-                    encolar(cola, fin, nombre, personas);
-                    cout << "⏳ Cliente agregado a lista de espera\n";
+                cout << "\nNombre: ";
+                cin >> nombre;
+                cout << "Personas: ";
+                cin >> personas;
+
+                if (personas > 10) {
+                    cout << "❌ Grupo rechazado\n";
                 } else {
-                    atendidos++; // no hubo espera
-                }
-            }
-        }
-
-        else if (op == 2) {
-            bool asignado;
-
-            do {
-                asignado = false;
-                Nodo* anterior = NULL;
-
-                if (mesas4 > 0) {
-                    Nodo* c = buscarCliente(cola, anterior, 4);
-                    if (c != NULL) {
-                        eliminarNodo(cola, fin, anterior, c);
-                        mesas4--;
-                        double espera = difftime(time(0), c->llegada);
-                        totalTiempo += espera;
+                    if (!asignarDirecto(nombre, personas, mesas4, mesas6, mesas10, cola)) {
+                        encolar(cola, fin, nombre, personas);
+                        cout << "⏳ Cliente agregado a lista de espera\n";
+                    } else {
                         atendidos++;
-                        cout << "✔ Mesa 4 asignada a " << c->nombre << endl;
-                        delete c;
-                        asignado = true;
                     }
                 }
+                break;
+            }
 
-                if (mesas6 > 0) {
-                    Nodo* c = buscarCliente(cola, anterior, 6);
-                    if (c != NULL) {
-                        eliminarNodo(cola, fin, anterior, c);
-                        mesas6--;
-                        double espera = difftime(time(0), c->llegada);
-                        totalTiempo += espera;
-                        atendidos++;
-                        cout << "✔ Mesa 6 asignada a " << c->nombre << endl;
-                        delete c;
-                        asignado = true;
+            case 2: {
+                asignarMesas(cola, fin, mesas4, mesas6, mesas10, totalTiempo, atendidos);
+                break;
+            }
+
+            case 3: {
+                int tipo;
+                cout << "\n1. Mesa 4\n2. Mesa 6\n3. Mesa 10\nOpcion: ";
+                cin >> tipo;
+
+                switch (tipo) {
+                case 1:
+                    if (mesas4 < 8) {
+                        mesas4++;
+                        cout << "✔ Mesa de 4 liberada\n";
+                    } else {
+                        cout << "❌ Error: No hay mesas de 4 ocupadas\n";
                     }
-                }
+                    break;
 
-                if (mesas10 > 0) {
-                    Nodo* c = buscarCliente(cola, anterior, 10);
-                    if (c != NULL) {
-                        eliminarNodo(cola, fin, anterior, c);
-                        mesas10--;
-                        double espera = difftime(time(0), c->llegada);
-                        totalTiempo += espera;
-                        atendidos++;
-                        cout << "✔ Mesa 10 asignada a " << c->nombre << endl;
-                        delete c;
-                        asignado = true;
+                case 2:
+                    if (mesas6 < 5) {
+                        mesas6++;
+                        cout << "✔ Mesa de 6 liberada\n";
+                    } else {
+                        cout << "❌ Error: No hay mesas de 6 ocupadas\n";
                     }
+                    break;
+
+                case 3:
+                    if (mesas10 < 3) {
+                        mesas10++;
+                        cout << "✔ Mesa de 10 liberada\n";
+                    } else {
+                        cout << "❌ Error: No hay mesas de 10 ocupadas\n";
+                    }
+                    break;
+
+                default:
+                    cout << "❌ Opcion invalida\n";
                 }
-
-            } while (asignado);
-
-            cout << "✔ Asignacion completada\n";
-        }
-
-        else if (op == 3) {
-            int tipo;
-            cout << "\n1. Mesa 4\n2. Mesa 6\n3. Mesa 10\nOpcion: ";
-            cin >> tipo;
-
-            if (tipo == 1) {
-                if (mesas4 < 8) {
-                    mesas4++;
-                    cout << "✔ Mesa de 4 liberada\n";
-                } else {
-                    cout << "❌ Error: No hay mesas de 4 ocupadas\n";
-                }
+                break;
             }
 
-            if (tipo == 2) {
-                if (mesas6 < 5) {
-                    mesas6++;
-                    cout << "✔ Mesa de 6 liberada\n";
-                } else {
-                    cout << "❌ Error: No hay mesas de 6 ocupadas\n";
-                }
-            }
+            case 4:
+                mostrarCola(cola);
+                break;
 
-            if (tipo == 3) {
-                if (mesas10 < 3) {
-                    mesas10++;
-                    cout << "✔ Mesa de 10 liberada\n";
-                } else {
-                    cout << "❌ Error: No hay mesas de 10 ocupadas\n";
-                }
-            }
+            case 5:
+                break;
 
-            else {
+            default:
                 cout << "❌ Opcion invalida\n";
-            }
         }
-
-        else if (op == 4) {
-            mostrarCola(cola);
-        }
-
     } while (op != 5);
 
     cout << "\n====================================\n";
     if (atendidos > 0) {
-        cout << "Tiempo promedio de espera: "
-             << fixed << setprecision(2)
-             << totalTiempo / atendidos << " segundos\n";
+        cout << "Tiempo promedio de espera: " << fixed << setprecision(2) << totalTiempo / atendidos << " segundos\n";
     } else {
         cout << "Sin clientes atendidos\n";
     }
