@@ -1,3 +1,10 @@
+/*
+Eduardo Rodriguez Ramos
+Cesar Antonio Mata Robles 
+Francisco Blanco Morales 
+Rebeca Moreno Gonzalez
+Perla Yuliana Gonzalez Campos 
+*/
 #include <iostream>
 #include <ctime>
 #include <iomanip>
@@ -56,54 +63,6 @@ void eliminarNodo(Nodo*& frente, Nodo*& fin, Nodo* anterior, Nodo* actual) {
     if (actual == fin) {
         fin = anterior;
     }
-}
-
-Nodo* buscarCliente(Nodo* frente, Nodo*& anterior, int tipoMesa) {
-    Nodo* actual = frente;
-    Nodo* prev = NULL;
-
-    while (actual != NULL) {
-
-        if (tipoMesa == 4) {
-            if (actual->personas >= 1 && actual->personas <= 4)
-                return actual;
-        }
-
-        if (tipoMesa == 6) {
-            if (actual->personas == 5 || actual->personas == 6)
-                return actual;
-
-            if (actual->personas == 4) {
-                Nodo* aux = frente;
-                while (aux != NULL) {
-                    if (aux->personas == 5 || aux->personas == 6)
-                        return NULL;
-                    aux = aux->sig;
-                }
-                return actual;
-            }
-        }
-
-        if (tipoMesa == 10) {
-            if (actual->personas >= 7 && actual->personas <= 10)
-                return actual;
-
-            if (actual->personas == 6) {
-                Nodo* aux = frente;
-                while (aux != NULL) {
-                    if (aux->personas >= 7)
-                        return NULL;
-                    aux = aux->sig;
-                }
-                return actual;
-            }
-        }
-
-        anterior = actual;
-        actual = actual->sig;
-    }
-
-    return NULL;
 }
 
 void mostrarCola(Nodo* frente) {
@@ -165,7 +124,6 @@ bool asignarDirecto(string nombre, int personas, int& m4, int& m6, int& m10, Nod
         }
 
         if (personas == 6 && m10 > 0) {
-
             bool hay7a10 = false;
             aux = cola;
 
@@ -202,7 +160,6 @@ void asignarMesas(Nodo*& cola, Nodo*& fin, int& mesas4, int& mesas6, int& mesas1
 
     do {
         asignado = false;
-
         Nodo* actual;
         Nodo* anterior;
         Nodo* mejor;
@@ -218,7 +175,7 @@ void asignarMesas(Nodo*& cola, Nodo*& fin, int& mesas4, int& mesas6, int& mesas1
                 if (actual->personas >= 1 && actual->personas <= 4) {
                     mejor = actual;
                     mejorAnt = anterior;
-                    break; // FIFO normal
+                    break;
                 }
                 anterior = actual;
                 actual = actual->sig;
@@ -236,7 +193,6 @@ void asignarMesas(Nodo*& cola, Nodo*& fin, int& mesas4, int& mesas6, int& mesas1
         }
 
         if (mesas6 > 0) {
-
             actual = cola;
             anterior = NULL;
             mejor = NULL;
@@ -358,7 +314,6 @@ void mostrarMesas(int mesas4, int mesas6, int mesas10) {
     cout << "   |                  |\n\n";
 }
 
-// ===== MAIN =====
 int main() {
     Nodo *cola = NULL, *fin = NULL;
 
@@ -370,7 +325,6 @@ int main() {
     int op;
 
     do {
-        cin.ignore();
         cout << "\n====================================\n";
         cout << "     RECEPCION RESTAURANTE\n";
         cout << "====================================\n";
@@ -481,7 +435,10 @@ int main() {
 
     cout << "\n====================================\n";
     if (atendidos > 0) {
-        cout << "Tiempo promedio de espera: " << fixed << setprecision(2) << totalTiempo / atendidos << " segundos\n";
+        double promedio = totalTiempo / atendidos;
+        int minutos = promedio / 60;
+        int segundos = (int)promedio % 60;
+        cout << "Tiempo promedio de espera: " << minutos << " minutos y " << segundos << " segundos\n";
     } else {
         cout << "Sin clientes atendidos\n";
     }

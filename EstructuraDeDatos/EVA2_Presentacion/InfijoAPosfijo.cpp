@@ -1,3 +1,10 @@
+/*
+Eduardo Rodriguez Ramos
+Cesar Antonio Mata Robles 
+Francisco Blanco Morales 
+Rebeca Moreno Gonzalez
+Perla Yuliana Gonzalez Campos 
+*/
 #include <iostream>
 #include <string>
 #include <stdlib.h>
