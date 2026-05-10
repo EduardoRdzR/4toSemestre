@@ -12,6 +12,7 @@ Perla Yuliana Gonzalez Campos
 #include <string>
 #include <iomanip>
 #include <limits>
+#include <queue>
 
 using namespace std;
 
@@ -47,18 +48,6 @@ struct NodoPila {
 
 struct Pila {
     NodoPila* tope;
-    int       cantidad;
-};
-
-// ----- Cola de inscripciones (implementacion manual) -----
-struct NodoCola {
-    Alumno    dato;
-    NodoCola* siguiente;
-};
-
-struct Cola {
-    NodoCola* frente;   // primer elemento (se desencola por aqui)
-    NodoCola* final;    // ultimo elemento  (se encola por aqui)
     int       cantidad;
 };
 
@@ -106,7 +95,7 @@ string pedirTelefono() {
 }
 
 // ============================================================
-//  LISTA
+//  OPERACIONES DE LISTA
 // ============================================================
 
 void inicializarLista(Lista& L) {
@@ -244,7 +233,7 @@ void liberarLista(Lista& L) {
 }
 
 // ============================================================
-//  PILA
+//  OPERACIONES DE PILA
 // ============================================================
 
 void inicializarPila(Pila& P) {
@@ -279,67 +268,6 @@ void liberarPila(Pila& P) {
     P.cantidad = 0;
 }
 
-// ============================================================
-//  COLA
-// ============================================================
-
-void inicializarCola(Cola& C) {
-    C.frente   = nullptr;
-    C.final    = nullptr;
-    C.cantidad = 0;
-}
-
-// Agrega un alumno al final de la cola
-void encolar(Cola& C, const Alumno& a) {
-    NodoCola* nuevo  = new NodoCola;
-    nuevo->dato      = a;
-    nuevo->siguiente = nullptr;
-
-    if (!C.final) {
-        // Cola estaba vacia: frente y final apuntan al unico nodo
-        C.frente = nuevo;
-        C.final  = nuevo;
-    } else {
-        C.final->siguiente = nuevo;
-        C.final            = nuevo;
-    }
-    C.cantidad++;
-}
-
-// Extrae el alumno del frente; devuelve false si la cola esta vacia
-bool desencolar(Cola& C, Alumno& extraido) {
-    if (!C.frente) return false;
-
-    extraido      = C.frente->dato;
-    NodoCola* tmp = C.frente;
-    C.frente      = C.frente->siguiente;
-
-    if (!C.frente)   // la cola quedo vacia
-        C.final = nullptr;
-
-    delete tmp;
-    C.cantidad--;
-    return true;
-}
-
-bool colaVacia(const Cola& C) {
-    return C.frente == nullptr;
-}
-
-void liberarCola(Cola& C) {
-    while (C.frente) {
-        NodoCola* tmp = C.frente;
-        C.frente      = C.frente->siguiente;
-        delete tmp;
-    }
-    C.final    = nullptr;
-    C.cantidad = 0;
-}
-
-// ============================================================
-//  FUNCIONES DE IMPRESION
-// ============================================================
-
 void imprimirAlumno(const Alumno& a) {
     cout << "  +------------------------------------------------+\n";
     cout << "  | Matricula : " << left << setw(35) << a.matricula        << " |\n";
@@ -353,7 +281,7 @@ void imprimirAlumno(const Alumno& a) {
     cout << "  | Direccion : " << left << setw(35) << a.direccion        << " |\n";
     cout << "  | Telefono  : " << left << setw(35) << a.telefono         << " |\n";
     cout << "  +------------------------------------------------+\n";
-    cout << right;
+    cout << right; // restaurar alineacion por defecto
 }
 
 void mostrarLista(const Lista& L) {
@@ -667,11 +595,10 @@ void reportes(const Lista& L, const Pila& P) {
 //  OPCION 5 - CONTROL DE INSCRIPCIONES
 // ============================================================
 
-// Ordena los alumnos de la lista activa (promedio DESC, nombre ASC)
-// y los encola uno a uno usando la cola manual.
-void crearColaInscripciones(const Lista& L, Cola& C) {
-    // Vaciar cola anterior liberando toda su memoria
-    liberarCola(C);
+// Crea la cola ordenando por promedio desc, luego nombre asc
+void crearColaInscripciones(const Lista& L, queue<Alumno>& cola) {
+    // Vaciar cola anterior
+    while (!cola.empty()) cola.pop();
 
     if (!L.cabeza) { cout << "  No hay alumnos activos.\n"; return; }
 
@@ -684,7 +611,7 @@ void crearColaInscripciones(const Lista& L, Cola& C) {
         actual  = actual->siguiente;
     }
 
-    // Bubble Sort: promedio DESC; si empatan, nombre ASC
+    // Ordenar: promedio DESC; si empatan, nombre ASC  (burbuja)
     for (int i = 0; i < n - 1; i++) {
         for (int j = 0; j < n - i - 1; j++) {
             bool intercambiar = false;
@@ -702,40 +629,33 @@ void crearColaInscripciones(const Lista& L, Cola& C) {
         }
     }
 
-    // Encolar en el orden ya ordenado
-    for (int i = 0; i < n; i++)
-        encolar(C, arr[i]);
-
+    for (int i = 0; i < n; i++) cola.push(arr[i]);
     delete[] arr;
 
     cout << "\n  Cola de inscripciones creada con " << n << " alumno(s).\n";
 }
 
-// Recorre los nodos de la cola sin modificarla (no desencola)
-void mostrarCola(const Cola& C) {
-    if (colaVacia(C)) { cout << "\n  La cola esta vacia.\n"; return; }
+void mostrarCola(queue<Alumno> colaAux) {
+    if (colaAux.empty()) { cout << "\n  La cola esta vacia.\n"; return; }
 
     cout << "\n  === COLA DE INSCRIPCIONES (frente -> final) ===\n";
     cout << "  +----------+-----------------------------+----------+\n";
     cout << "  |Matricula | Nombre                      | Promedio |\n";
     cout << "  +----------+-----------------------------+----------+\n";
 
-    NodoCola* actual = C.frente;
-    while (actual) {
-        const Alumno& a = actual->dato;
+    while (!colaAux.empty()) {
+        const Alumno& a = colaAux.front();
         cout << "  | " << right << setw(8) << a.matricula << " | "
              << left  << setw(27) << a.nombre.substr(0, 27) << right << " | "
              << fixed << setprecision(2) << setw(8) << a.promedio << " |\n";
-        actual = actual->siguiente;
+        colaAux.pop();
     }
 
     cout << "  +----------+-----------------------------+----------+\n";
-    cout << "  Total en cola: " << C.cantidad << "\n";
 }
 
-// Desencola alumno por alumno y los distribuye en los grupos indicados
-void inscribirAlumnos(Cola& C) {
-    if (colaVacia(C)) {
+void inscribirAlumnos(queue<Alumno>& cola) {
+    if (cola.empty()) {
         cout << "\n  [!] La cola esta vacia. Primero cree la cola (opcion 1).\n";
         pausar();
         return;
@@ -749,7 +669,7 @@ void inscribirAlumnos(Cola& C) {
     cin >> capacidad;
     limpiarBuffer();
 
-    // Arreglo dinamico de arreglos para almacenar cada grupo
+    // Arreglo dinamico de arreglos para cada grupo
     Alumno** listaGrupos = new Alumno*[grupos];
     int*     tamGrupos   = new int[grupos];
     for (int i = 0; i < grupos; i++) {
@@ -758,11 +678,11 @@ void inscribirAlumnos(Cola& C) {
     }
 
     // Desencolar y llenar grupos en orden
-    for (int i = 0; i < grupos && !colaVacia(C); i++) {
+    for (int i = 0; i < grupos && !cola.empty(); i++) {
         cout << "\n  === LLENANDO GRUPO " << i + 1 << " ===\n";
-        while (!colaVacia(C) && tamGrupos[i] < capacidad) {
-            Alumno a;
-            desencolar(C, a);
+        while (!cola.empty() && tamGrupos[i] < capacidad) {
+            Alumno a = cola.front();
+            cola.pop();
             listaGrupos[i][tamGrupos[i]++] = a;
             cout << "  Inscrito: [" << a.matricula << "] "
                  << a.nombre << "  -  Promedio: "
@@ -791,11 +711,11 @@ void inscribirAlumnos(Cola& C) {
         cout << "  +----------+-----------------------------+----------+\n";
     }
 
-    if (!colaVacia(C))
-        cout << "\n  [!] Quedaron " << C.cantidad
+    if (!cola.empty())
+        cout << "\n  [!] Quedaron " << cola.size()
              << " alumno(s) sin inscribir (grupos llenos).\n";
 
-    // Liberar arreglos dinamicos de grupos
+    // Liberar arreglos dinamicos
     for (int i = 0; i < grupos; i++) delete[] listaGrupos[i];
     delete[] listaGrupos;
     delete[] tamGrupos;
@@ -804,9 +724,7 @@ void inscribirAlumnos(Cola& C) {
 }
 
 void controlInscripciones(const Lista& L) {
-    Cola cola;
-    inicializarCola(cola);
-
+    queue<Alumno> cola;
     int op;
     do {
         cout << "\n  === CONTROL DE INSCRIPCIONES ===\n";
@@ -814,7 +732,7 @@ void controlInscripciones(const Lista& L) {
         cout << "  [2] Mostrar cola\n";
         cout << "  [3] Inscribir alumnos en grupos\n";
         cout << "  [0] Regresar al menu principal\n";
-        cout << "  Alumnos en cola: " << cola.cantidad << "\n\n";
+        cout << "  Alumnos en cola: " << cola.size() << "\n\n";
         cout << "  Opcion: ";
         cin >> op;
         limpiarBuffer();
@@ -827,8 +745,6 @@ void controlInscripciones(const Lista& L) {
             default: cout << "  Opcion invalida.\n";
         }
     } while (op != 0);
-
-    liberarCola(cola);
 }
 
 // ============================================================
